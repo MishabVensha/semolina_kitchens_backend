@@ -1,0 +1,67 @@
+name: Build and deploy Node.js app to Azure Web App - i-WMSbackend
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js version
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.x'
+
+      - name: Install dependencies, build, and test
+        run: |
+          npm install
+          npm run build --if-present  # This will run the build script if it exists
+            # This will run the test script if it exists
+        env:
+          MONGO_URL: ${{ secrets.MONGO_URL }}
+          
+      - name: Upload artifact for deployment job
+        uses: actions/upload-artifact@v4
+        with:
+          name: node-app
+          path: .  # Adjust the path if you only need specific build output
+
+  deploy:
+    runs-on: windows-latest
+    needs: build
+    environment:
+      name: 'Production'
+    permissions:
+      id-token: write  # Required for requesting the JWT
+
+    steps:
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v4
+        with:
+          name: node-app
+          path: ./downloaded-app  # Define a clear path for the downloaded artifact
+
+      - name: Verify artifact contents
+        run: |
+          echo "Checking contents of downloaded-app directory"
+          dir ./downloaded-app  # Use PowerShell to verify artifact contents
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_B7FBDF98C3C74C8580F7622F0E1A8AD9 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_DA3829D6B9DB49DDBFAE1BBACF116462 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_91687165EDEE4DE2BCEB297DD45F248A }}
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        id: deploy-to-webapp
+        with:
+          app-name: 'i-WMSbackend'
+          slot-name: 'Production'
+          package: './downloaded-app'  # Ensure this matches the correct path to your app package
