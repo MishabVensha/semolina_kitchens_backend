@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const returnOrderSchema = new mongoose.Schema({
   gateNo: {
     type: String,
-    required: true,
+    required: false,
   },
   employee: {
     name: {

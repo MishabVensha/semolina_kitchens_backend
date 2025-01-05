@@ -1,14 +1,17 @@
 import mongoose from "mongoose";
 import catchAsync from "../../utils/errors/catchAsync.js";
 import { DynamicSearch } from "../../utils/dynamicSearch/dynamic.js";
+import { v4 as uuidv4 } from 'uuid';
 import returnOrderModel from "../../database/schema/semolina/returnOrder.schema.js";
 
 
 export const addReturn = catchAsync(async (req, res) => {
   const authUserDetail = req.userDetails;
+  const gateNo = `GATE-${uuidv4().split('-')[0]}`;
   const returnData = {
     ...req.body,
     created_employee_id: authUserDetail._id,
+    gateNo: gateNo,
   };
   const newReturn = new returnOrderModel(returnData);
   const savedReturn = await newReturn.save();
