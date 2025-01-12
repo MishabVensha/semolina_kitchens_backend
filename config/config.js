@@ -10,6 +10,7 @@ const getConfigs = () => {
       origin: [
         "http://localhost:3001",
         "http://localhost:3000",
+        "https://semolina-kitchens-frontend.vercel.app",
         "https://iwms-vensha-frontend.vercel.app",
         "https://i-wms-ddhaarbmceaugcfa.eastus-01.azurewebsites.net",
       ],
