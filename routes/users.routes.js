@@ -3,7 +3,9 @@ import {
   AddUser,
   AdminChangePassword,
   DeleteUser,
+  EmpIDList,
   EmployeeIdAutoGenerate,
+  ListEmployeeById,
   ListUser,
   RoleNameList,
   UpdateUser,
@@ -21,6 +23,8 @@ router.patch(
   AdminChangePassword
 );
 router.get("/role-name-list", RoleNameList);
+router.get("/list-emp-without-permission", EmpIDList);
 router.get("/employee-id-auto-generate", EmployeeIdAutoGenerate);
+router.get("/list-employee-byId", ListEmployeeById);
 
 export default router;

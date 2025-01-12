@@ -243,6 +243,13 @@ const ExtractRequiredPermission = (routeName) => {
     case "/verify-bin":
       return "forklift_operator_master_edit";
 
+    case "/add-return-order":
+      return "user_create";
+    case "/list-pending-approvel":
+      return "user_view";
+    case "/update-status":
+      return "user_view";
+
     default:
       return null;
   }

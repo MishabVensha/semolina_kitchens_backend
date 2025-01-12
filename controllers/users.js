@@ -292,6 +292,21 @@ export const RoleNameList = catchAsync(async (req, res) => {
     message: "List all role name.",
   });
 });
+export const EmpIDList = catchAsync(async (req, res) => {
+  const role = await UserModel.find({}, "_id employee_id first_name");
+  if (!role) {
+    return res.status(401).json({
+      result: [],
+      status: false,
+      message: "Role not found.",
+    });
+  }
+  return res.status(200).json({
+    result: role,
+    status: true,
+    message: "List all role name.",
+  });
+});
 
 export const EmployeeIdAutoGenerate = catchAsync(async (req, res) => {
   const user = await UserModel.distinct("employee_id");
@@ -308,5 +323,15 @@ export const EmployeeIdAutoGenerate = catchAsync(async (req, res) => {
     result: latestEmployeeId,
     status: true,
     message: "Latest employee Id.",
+  });
+});
+
+export const ListEmployeeById = catchAsync(async (req, res) => {
+  const ID = req.query.employee_id;
+  const employee = await UserModel.findOne({ employee_id: ID });
+  return res.status(201).json({
+    result: employee,
+    status: true,
+    message: "Get employee List",
   });
 });

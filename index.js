@@ -33,6 +33,8 @@ import ProductionMasterRouter from "./routes/warehouseExecutive/production.route
 import ForkliftOperatorMasterRouter from "./routes/forkliftOperator.routes.js";
 import TruckLoadingRouter from "./routes/warehouseExecutive/truckLoading.routes.js";
 import DeliveryRouter from "./routes/warehouseExecutive/delivery.routes.js";
+import ReturnOrderRouter from "./routes/semolina/returnOrder.routes.js";
+import ApprovedRequest from "./routes/semolina/approvedRequest.routes.js";
 import { globalErrorHandler } from "./utils/errors/globalErrorHandler.js";
 const Configs = getConfigs();
 mongo_service();
@@ -102,6 +104,9 @@ app.use(
 );
 app.use(`/api/${Configs.server.version}/truck-loading`, TruckLoadingRouter);
 app.use(`/api/${Configs.server.version}/delivery`, DeliveryRouter);
+app.use(`/api/${Configs.server.version}/return-order`, ReturnOrderRouter);
+app.use(`/api/${Configs.server.version}/approved-request`, ApprovedRequest);
+
 app.use(globalErrorHandler);
 // Error handling for the server
 server.on("error", (error) => {

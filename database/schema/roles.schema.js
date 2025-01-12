@@ -102,6 +102,12 @@ const RoleSchema = new mongoose.Schema({
     delivery_create: { type: Boolean, default: false },
     delivery_edit: { type: Boolean, default: false },
     delivery_view: { type: Boolean, default: false },
+    approved_request_create: { type: Boolean, default: false },
+    approved_request_edit: { type: Boolean, default: false },
+    approved_request_view: { type: Boolean, default: false },
+    gr_create: { type: Boolean, default: false },
+    gr_edit: { type: Boolean, default: false },
+    gr_view: { type: Boolean, default: false },
   },
   status: { type: Boolean, default: true },
   created_employee_id: {

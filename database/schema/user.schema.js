@@ -97,7 +97,10 @@ const UserSchema = new mongoose.Schema({
     // required: true,
     trim: true,
   },
-
+  level: {
+    type: String,
+    default: null,
+  },
   user_remarks: {
     type: String,
   },

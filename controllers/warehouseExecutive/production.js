@@ -8,6 +8,7 @@ import catchAsync from "../../utils/errors/catchAsync.js";
 import StockModel from "../../database/schema/stock/stock.schema.js";
 import OutboundForkliftModel from "../../database/schema/warehouseExecutive/outboundForklift.js";
 import InboundTransactionModel from "../../database/schema/TransactionTable/inboundTransaction.js";
+import RequestApprovedModel from "../../database/schema/semolina/approvedRequest.js";
 
 export const BulkUploadProduction = catchAsync(async (req, res, next) => {
   const file = req.file;
@@ -857,70 +858,125 @@ export const GetAllStatusCount = catchAsync(async (req, res) => {
 
   const isAdmin = user.role_id.role_name === "Admin"; // Adjust based on how you store and reference roles
   let searchQuery = { deleted_at: null };
+
   if (!isAdmin) {
     searchQuery = { ...searchQuery, created_employee_id: userId };
   }
 
-  const statusCounts = await ProductionModel.aggregate([
+  // Aggregate data to get returnOrder counts and status counts based on approvalLevel
+  const statusCounts = await RequestApprovedModel.aggregate([
+    {
+      $lookup: {
+        from: "returnorders", // The name of the collection you are joining with
+        localField: "returnOrder_id", // The field in RequestApproved that references ReturnOrder
+        foreignField: "_id", // The field in ReturnOrder being referenced
+        as: "returnOrderData", // Alias for the joined data
+      },
+    },
+    {
+      $unwind: "$returnOrderData", // Unwind the array from the lookup to work with individual documents
+    },
     {
       $facet: {
-        // Group by status and count
-        statusCounts: [
+        // Count total return orders
+        totalReturnOrders: [
           {
             $match: {
+              deleted_at: { $eq: null }, // Filter out deleted documents
+              ...searchQuery, // Include user-based filtering if not Admin
+            },
+          },
+          {
+            $count: "count", // Count the total return orders
+          },
+        ],
+        // Count status by approval level
+        level1Counts: [
+          {
+            $match: {
+              approvalLevel: "Level 1", // Filter for Level 1 approvals
               deleted_at: { $eq: null },
-              ...searchQuery, // Filter out documents where deleted_at is not null
+              ...searchQuery, // Include user-based filtering if not Admin
             },
           },
           {
             $group: {
-              _id: "$status", // Group by the 'status' field
-              count: { $sum: 1 }, // Sum 1 for each document in the group
+              _id: "$status", // Group by status
+              count: { $sum: 1 }, // Count the number of each status
             },
           },
           {
             $project: {
-              status: "$_id", // Rename '_id' to 'status'
-              count: 1, // Include the count in the output
-              _id: 0, // Exclude the '_id' field from the output
+              status: "$_id",
+              count: 1,
+              _id: 0,
             },
           },
         ],
-        // Count deleted documents
-        deletedCount: [
+        level2Counts: [
           {
             $match: {
-              deleted_at: { $ne: null }, // Match documents where deleted_at is not null
+              approvalLevel: "Level 2", // Filter for Level 2 approvals
+              deleted_at: { $eq: null },
+              ...searchQuery, // Include user-based filtering if not Admin
             },
           },
           {
-            $count: "count", // Count the number of documents
+            $group: {
+              _id: "$status", // Group by status
+              count: { $sum: 1 }, // Count the number of each status
+            },
+          },
+          {
+            $project: {
+              status: "$_id",
+              count: 1,
+              _id: 0,
+            },
           },
         ],
       },
     },
     {
       $project: {
-        statusCounts: 1,
-        deletedCount: {
-          $arrayElemAt: ["$deletedCount.count", 0], // Extract the count value from the array
-        },
+        totalReturnOrders: 1,
+        level1Counts: 1,
+        level2Counts: 1,
       },
     },
   ]);
 
-  // Transform the array into an object with status as keys
-  const statusCountObject = statusCounts[0].statusCounts.reduce((acc, cur) => {
-    acc[cur.status] = cur.count;
-    return acc;
-  }, {});
+  // Extract counts and prepare the response
+  const totalReturnOrderCount =
+    statusCounts[0].totalReturnOrders.length > 0
+      ? statusCounts[0].totalReturnOrders[0].count
+      : 0;
+
+  const level1Counts = statusCounts[0].level1Counts.reduce(
+    (acc, cur) => {
+      if (cur.status === "Pending") acc.level1Pending = cur.count;
+      if (cur.status === "Approved") acc.level1Approved = cur.count;
+      if (cur.status === "Rejected") acc.level1Rejected = cur.count;
+      return acc;
+    },
+    { level1Pending: 0, level1Approved: 0, level1Rejected: 0 }
+  );
+
+  const level2Counts = statusCounts[0].level2Counts.reduce(
+    (acc, cur) => {
+      if (cur.status === "Pending") acc.level2Pending = cur.count;
+      if (cur.status === "Approved") acc.level2Approved = cur.count;
+      if (cur.status === "Rejected") acc.level2Rejected = cur.count;
+      return acc;
+    },
+    { level2Pending: 0, level2Approved: 0, level2Rejected: 0 }
+  );
 
   res.status(200).json({
     data: {
-      pending: statusCountObject["Pending"] || 0,
-      verified: statusCountObject["Verified"] || 0,
-      allocated: statusCountObject["Allocated"] || 0,
-      deleted: statusCounts[0].deletedCount || 0,
+      totalReturnOrders: totalReturnOrderCount,
+      ...level1Counts,
+      ...level2Counts,
     },
     status: true,
     message: "Status List",

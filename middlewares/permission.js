@@ -11,6 +11,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CheckRoleAndTokenAccess = async (req, res, next) => {
   try {
     const decoded = await verifyToken(req, res, next);
+
+    
     if (!decoded) {
       return res.status(400).json({
         result: [],
@@ -44,6 +46,8 @@ const CheckRoleAndTokenAccess = async (req, res, next) => {
     if (req.originalUrl != "/api/V1/profile/list-user-profile") {
       const requiredPermission = ExtractRequiredPermission(req.route.path);
 
+      
+
       if (!requiredPermission) {
         return res.status(400).json({
           result: [],
@@ -51,6 +55,7 @@ const CheckRoleAndTokenAccess = async (req, res, next) => {
           message: "Required permission not specified for this route",
         });
       }
+
 
       if (
         user?.role_id.permissions &&

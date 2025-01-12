@@ -15,52 +15,48 @@ const returnOrderSchema = new mongoose.Schema({
       required: true,
     },
   },
-  materialDetails: [
+  skus: [
     {
-      skuCode: {
+      sku_code: {
         type: String,
-        required: true,
+        trim: true,
       },
-      skuDescription: {
+      sku_description: {
         type: String,
-        required: true,
+        trim: true,
       },
-      quantity: {
-        type: Number,
-        required: true,
+      sut: {
+        type: String,
+        trim: true,
+      },
+      stock_qty: {
+        type: String,
+        trim: true,
       },
     },
   ],
-  createdBy: {
-    type: String,
+  created_employee_id: {
+    type: mongoose.Types.ObjectId,
+    ref: "users",
     required: true,
+    trim: true,
   },
   level1Approval: {
     approvedBy: {
-      type: String,
-      default: null,
-    },
-    approvedAt: {
-      type: Date,
+      type: mongoose.Schema.Types.ObjectId, // Reference to User or relevant model
+      ref: "User", // The name of the model you're referencing
       default: null,
     },
     status: {
       type: String,
       enum: ["Pending", "Approved", "Rejected"],
       default: "Pending",
-    },
-    remark: {
-      type: String,
-      default: null,
     },
   },
   level2Approval: {
     approvedBy: {
-      type: String,
-      default: null,
-    },
-    approvedAt: {
-      type: Date,
+      type: mongoose.Schema.Types.ObjectId, // Reference to User or relevant model
+      ref: "User", // The name of the model you're referencing
       default: null,
     },
     status: {
@@ -68,16 +64,16 @@ const returnOrderSchema = new mongoose.Schema({
       enum: ["Pending", "Approved", "Rejected"],
       default: "Pending",
     },
-    remark: {
-      type: String,
-      default: null,
-    },
   },
-}, {
-  timestamps: true,
+  remark: {
+    type: String,
+    default: null,
+  },
+  created_at: { type: Date, default: Date.now },
+  updated_at: { type: Date, default: Date.now },
+  deleted_at: { type: Date, default: null },
 });
 
-const returnOrderModel = mongoose.model("returnOrder", returnOrderSchema);
+const ReturnOrderModel = mongoose.model("returnOrder", returnOrderSchema);
 
-export default returnOrderModel;
-
+export default ReturnOrderModel;
